@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sum Assured Calculator</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧮</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#13293D; --ink2:#4A5E6E; --paper:#F3F6F5; --card:#FFFFFF; --line:#D3DDDA;
+  --teal:#0E6B6B; --teal-soft:#E1EFEE; --green:#26724A; --green-soft:#E3F1E8;
+  --amber:#9A6300; --amber-soft:#FBF0DA; --red:#B3261E; --red-soft:#FBE6E4; --head:#13293D;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ink:#E4ECEA; --ink2:#A3B4B1; --paper:#0F1A20; --card:#16252D; --line:#2A3C44;
+  --teal:#5CC2BE; --teal-soft:#173B3D; --green:#6FCB97; --green-soft:#183427;
+  --amber:#E8B45A; --amber-soft:#3A2E14; --red:#F08A80; --red-soft:#3D1C1A; --head:#0A1318;}}
+:root[data-theme="dark"]{
+  --ink:#E4ECEA; --ink2:#A3B4B1; --paper:#0F1A20; --card:#16252D; --line:#2A3C44;
+  --teal:#5CC2BE; --teal-soft:#173B3D; --green:#6FCB97; --green-soft:#183427;
+  --amber:#E8B45A; --amber-soft:#3A2E14; --red:#F08A80; --red-soft:#3D1C1A; --head:#0A1318;}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:"Atkinson Hyperlegible","Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.5}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--head);color:#F3F6F5}
+.hin{max-width:640px;margin:0 auto;padding:12px 16px;display:flex;gap:12px;align-items:center}
+.hin div{flex:1;min-width:0}
+h1{margin:0;font-size:1.15rem;line-height:1.2}
+.hin p{margin:0;font-size:.8rem;opacity:.75}
+.pdf{border:1.5px solid currentColor;border-radius:999px;padding:6px 12px;color:inherit;text-decoration:none;font-weight:700;font-size:.85rem;white-space:nowrap}
+main{max-width:640px;margin:0 auto;padding:16px 16px 40px}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+@media(min-width:560px){.seg{grid-template-columns:repeat(4,1fr)}}
+.seg button{border:1.5px solid var(--line);background:var(--card);border-radius:10px;padding:10px 8px;cursor:pointer;font-weight:700;font-size:.9rem;line-height:1.25}
+.seg button[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:#fff}
+:root[data-theme="dark"] .seg button[aria-pressed="true"]{color:#0F1A20}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .seg button[aria-pressed="true"]{color:#0F1A20}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+label{display:block;font-weight:700;font-size:.9rem;margin:12px 0 4px}
+label:first-child{margin-top:0}
+label span{font-weight:400;color:var(--ink2)}
+input,select{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:8px;background:var(--paper)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.res{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:14px}
+.res .top{padding:14px 16px;border-bottom:2px dashed var(--line)}
+.res .top small{color:var(--ink2)}
+.figs{display:grid;grid-template-columns:1fr 1fr;gap:0}
+.fig{padding:14px 16px}
+.fig+.fig{border-left:1px solid var(--line)}
+.fig small{display:block;color:var(--ink2);font-size:.82rem}
+.fig b{display:block;font-size:1.45rem;line-height:1.2;margin-top:2px}
+.fig em{font-style:normal;font-size:.8rem;color:var(--ink2)}
+.msg{padding:10px 16px;border-top:1px solid var(--line);font-size:.92rem}
+.msg.ok{background:var(--green-soft);color:var(--green)}
+.msg.warn{background:var(--amber-soft);color:var(--amber)}
+.msg.bad{background:var(--red-soft);color:var(--red)}
+.msg.info{color:var(--ink2)}
+.empty{padding:16px;color:var(--ink2)}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{border-bottom:1px solid var(--line);padding:7px 6px;text-align:left;vertical-align:top}
+th{font-size:.8rem;color:var(--ink2)}
+tr.hl td{background:var(--teal-soft);font-weight:700}
+h2{font-size:1rem;margin:0 0 8px}
+.note{font-size:.85rem;color:var(--ink2)}
+ul{padding-left:18px;margin:6px 0}
+footer{max-width:640px;margin:0 auto;padding:0 16px 30px;font-size:.8rem;color:var(--ink2)}
+</style>
+</head>
+<body>
+<header><div class="hin">
+  <div><h1>Sum Assured Calculator</h1><p>Field Underwriting Guide, Oct 2026</p></div>
+  <a class="pdf" id="pdf" href="https://epartner-my.greateasternlife.com" target="_blank" rel="noopener" title="Opens e-Partner (agent login required)">📄 Source</a>
+</div></header>
+
+<main>
+  <div class="seg" role="group" aria-label="Client type">
+    <button data-m="inc" aria-pressed="true">Earning income</button>
+    <button data-m="non" aria-pressed="false">No fixed income</button>
+    <button data-m="key" aria-pressed="false">Keyman</button>
+    <button data-m="ee" aria-pressed="false">Employer-employee</button>
+  </div>
+  <div id="form" class="card"></div>
+  <div id="out"></div>
+  <div id="ref"></div>
+</main>
+<footer><p><b>Source:</b> Great Eastern Life Malaysia Field Underwriting Guide, V102026 (revised 1 Oct 2026), available on <a href="https://epartner-my.greateasternlife.com" target="_blank" rel="noopener" style="color:var(--teal)">e-Partner</a> (agent login required).</p>For agent reference only. All existing and concurrent cover with all insurers counts toward the limit. Final decision rests with New Business Underwriting.</footer>
+
+<script>
+
+const $=s=>document.querySelector(s);
+const fmt=n=>'RM '+Math.round(n).toLocaleString('en-MY');
+const v=id=>{const e=$('#'+id);const x=e?parseFloat(String(e.value).replace(/,/g,'')):NaN;return isNaN(x)?0:x};
+
+const BANDS=[[40,'Up to 40',30,20],[50,'41–50',25,15],[55,'51–55',20,10],[60,'56–60',15,8],[70,'61–70',10,5]];
+const band=anb=>BANDS.find(b=>anb<=b[0]);
+const num=(id,ph,money=true)=>money
+  ?`<input type="text" id="${id}" inputmode="numeric" autocomplete="off" data-money placeholder="${Number(ph).toLocaleString('en-MY')}">`
+  :`<input type="number" id="${id}" inputmode="numeric" placeholder="${ph}">`;
+function moneyFormat(e){
+  const el=e.target; if(!el.matches('[data-money]')) return;
+  const pos=el.selectionStart, before=el.value.slice(0,pos).replace(/[^\d]/g,'').length;
+  const digits=el.value.replace(/[^\d]/g,'').replace(/^0+(?=\d)/,'');
+  el.value=digits?Number(digits).toLocaleString('en-MY'):'';
+  let i=0,c=0; while(i<el.value.length&&c<before){if(/\d/.test(el.value[i]))c++;i++}
+  try{el.setSelectionRange(i,i)}catch(_){}
+}
+
+function factorTable(anb,dd){
+  return `<div class="card"><h2>Income factors by age</h2><table><tr><th>ANB</th><th>Life / TPD</th>${dd?'<th>Critical illness</th>':''}</tr>${
+    BANDS.map(b=>`<tr class="${anb&&band(anb)===b?'hl':''}"><td>${b[1]}</td><td>${b[2]}×</td>${dd?`<td>${b[3]}×</td>`:''}</tr>`).join('')
+  }<tr class="${anb>70?'hl':''}"><td>Over 70</td><td colspan="${dd?2:1}">Individual consideration</td></tr></table></div>`;
+}
+function room(max,have){
+  if(!have) return '';
+  const left=max-have;
+  return left>=0?`<div class="msg ok">Existing ${fmt(have)}. Room for another ${fmt(left)}.</div>`
+                :`<div class="msg bad">Existing ${fmt(have)} is already ${fmt(-left)} over the limit.</div>`;
+}
+
+const MODES={
+ inc:{
+  form:`<div class="row"><div><label for="anb">Age next birthday</label>${num('anb','35',false)}</div>
+        <div><label for="inc">Annual income (RM)</label>${num('inc','120000')}</div></div>
+        <label for="exL">Existing Life/TPD cover <span>all insurers, optional</span></label>${num('exL','0')}
+        <label for="exD">Existing critical illness cover <span>optional</span></label>${num('exD','0')}`,
+  calc(){
+    const anb=v('anb'),inc=v('inc');
+    if(!anb||!inc) return `<div class="res"><div class="empty">Enter age and annual income.</div></div>`+factorTable(anb,true);
+    const b=band(anb);
+    if(!b) return `<div class="res"><div class="msg warn">Over age 70: individual consideration by underwriting.</div></div>`+factorTable(anb,true);
+    const ml=inc*b[2],md=inc*b[3];
+    return `<div class="res"><div class="top"><small>Maximum cover at ANB ${anb}, income ${fmt(inc)}</small></div>
+      <div class="figs"><div class="fig"><small>Life / TPD</small><b>${fmt(ml)}</b><em>${b[2]}× income</em></div>
+      <div class="fig"><small>Critical illness</small><b>${fmt(md)}</b><em>${b[3]}× income</em></div></div>
+      ${room(ml,v('exL')).replace('Existing','Life/TPD: existing')}${room(md,v('exD')).replace('Existing','CI: existing')}
+      <div class="msg info">Counts only the client's own earned income: salary, bonus, commission, deferred compensation. Investment income and household income don't count. Income must be reasonable for the job and age.</div></div>`
+      +factorTable(anb,true);
+  }},
+ non:{
+  form:`<label for="grp">Client is</label><select id="grp">
+          <option value="juv">Juvenile, 14 days to ANB 18</option>
+          <option value="stu">Student, ANB 19+ (tertiary)</option>
+          <option value="hw">Housewife / retiree / non-income</option>
+          <option value="nfi">Non-fixed income</option>
+          <option value="bk">Undischarged bankrupt</option></select>
+        <label for="sa">Proposed total Life cover <span>incl. existing, all insurers</span></label>${num('sa','800000')}`,
+  calc(){
+    const g=$('#grp').value,sa=v('sa');
+    const D={juv:[1e6,3e6,'RM 2,000,000','parents'],stu:[1.5e6,3e6,'RM 2,000,000','parents'],hw:[1e6,3e6,'RM 2,000,000','spouse'],nfi:[6e5,1e6,null,'spouse']};
+    if(g==='bk') return `<div class="res"><div class="figs"><div class="fig"><small>Life / TPD / CI</small><b>RM 150,000</b></div><div class="fig"><small>Hospital & surgical</small><b>RM 400</b><em>room & board per day</em></div></div>
+      ${sa>150000?'<div class="msg bad">Above RM 150,000 is not allowed.</div>':''}
+      <div class="msg info">All other benefits declined. Third-party policy only, owned by someone with insurable interest (spouse or company) who can sustain the policy.</div></div>`;
+    const [free,cap,dd,who]=D[g];
+    let m='';
+    if(sa){ if(sa<=free) m=`<div class="msg ok">${fmt(sa)} is within the no-conditions limit.</div>`;
+      else if(sa<=cap) m=`<div class="msg warn">${fmt(sa)} is allowed if the ${who} ${who==='parents'?'are':'is'} insured for more than this and financially justified.</div>`;
+      else m=`<div class="msg bad">${fmt(sa)} is above the ${fmt(cap)} cap: case-by-case only.</div>`;}
+    const cond=who==='parents'
+      ?'Above the no-conditions limit: parents must be insured for more than the child, be financially justified, and all siblings covered equally. Underwriting will get the child\'s medical records.'
+      :'Above the no-conditions limit: spouse must be insured for more and be financially justified.'+(g==='hw'?' If unemployed, show the source of premium and ability to pay, whatever the amount.':'');
+    return `<div class="res"><div class="figs"><div class="fig"><small>No conditions up to</small><b>${fmt(free)}</b></div>
+      <div class="fig"><small>Total cap, all insurers</small><b>${fmt(cap)}</b>${dd?`<em>CI capped at ${dd}</em>`:''}</div></div>${m}
+      <div class="msg info">${cond}</div></div>`;
+  }},
+ key:{
+  form:`<label for="kt">Purpose</label><select id="kt">
+          <option value="rep">Key person replacement</option>
+          <option value="one">Loss of profit, one key person</option>
+          <option value="many">Loss of profit, several key persons</option></select><div id="kf"></div>`,
+  sub(){const t=$('#kt').value;$('#kf').innerHTML=
+    t==='rep'?`<div class="row"><div><label for="anb">Key person's ANB</label>${num('anb','45',false)}</div><div><label for="sz">Company size</label><select id="sz"><option value="s">Small</option><option value="m">Medium</option></select></div></div><label for="inc">Key person's annual income (RM)</label>${num('inc','200000')}`
+   :t==='one'?`<div class="row"><div><label for="gp">Gross profit (RM)</label>${num('gp','1000000')}</div><div><label for="np">Net profit (RM)</label>${num('np','300000')}</div></div>`
+   :`<div class="row"><div><label for="sal">Key person's salary (RM)</label>${num('sal','150000')}</div><div><label for="pay">Total payroll (RM)</label>${num('pay','1500000')}</div></div><div class="row"><div><label for="to">Sales turnover (RM)</label>${num('to','8000000')}</div><div><label for="yr">Years to recover <span>max 2</span></label>${num('yr','2',false)}</div></div>`},
+  calc(){
+    const t=$('#kt').value;let r='';
+    if(t==='rep'){const anb=v('anb'),inc=v('inc'),m=$('#sz').value==='m';
+      if(!anb||!inc) r='<div class="empty">Enter age and income.</div>';
+      else if(m) r=`<div class="top"><small>Medium company: 1 to 5× income</small></div><div class="figs"><div class="fig"><small>From</small><b>${fmt(inc)}</b></div><div class="fig"><small>Up to</small><b>${fmt(5*inc)}</b></div></div>`;
+      else if(anb<60) r=`<div class="top"><small>Small company, under ANB 60</small></div><div class="fig"><small>Up to</small><b>${fmt(10*inc)}</b><em>10× income</em></div>`;
+      else r=`<div class="top"><small>Small company, ANB 60 and above</small></div><div class="fig"><small>Individual consideration, around</small><b>${fmt(3*inc)}</b><em>3× income</em></div>`;}
+    if(t==='one'){const gp=v('gp'),np=v('np');
+      r=(!gp&&!np)?'<div class="empty">Enter gross and net profit.</div>':`<div class="figs"><div class="fig"><small>2× gross profit</small><b>${fmt(2*gp)}</b></div><div class="fig"><small>5× net profit</small><b>${fmt(5*np)}</b></div></div><div class="msg ok">Maximum: ${fmt(Math.max(2*gp,5*np))}, the higher of the two. This is the total for all key persons insured.</div>`;}
+    if(t==='many'){const s=v('sal'),p=v('pay'),to=v('to'),y=Math.min(v('yr')||2,2);
+      r=(!s||!p||!to)?'<div class="empty">Enter salary, payroll and turnover.</div>':`<div class="top"><small>(${fmt(s)} ÷ ${fmt(p)}) × ${fmt(to)} × ${y} yr</small></div><div class="fig"><small>Maximum for this key person</small><b>${fmt(s/p*to*y)}</b></div>`;}
+    return `<div class="res">${r}</div><div class="card"><h2>Good to know</h2><ul>
+      <li>Only a Sdn Bhd, Bhd or LLP can apply. Audit and legal firms are subject to underwriting.</li>
+      <li>Early Living products, riders, waivers and income benefits don't fit a keyman policy (except IL CIBR, CICR, IL CIPR and R&B).</li>
+      <li>A Keyman Questionnaire is required: the person's value, how the amount was set, ownership %, and all other key persons with their cover.</li>
+      <li>Small company: services turnover RM 200k to under RM 1m or 5–19 staff; manufacturing RM 250k to under RM 10m or 5–50 staff. Medium: services RM 1m–5m or 20–50 staff; manufacturing RM 10m–25m or 51–150 staff.</li></ul></div>`;
+  }},
+ ee:{
+  form:`<div class="row"><div><label for="anb">Employee's ANB</label>${num('anb','35',false)}</div><div><label for="inc">Employee's annual income (RM)</label>${num('inc','80000')}</div></div>`,
+  calc(){const anb=v('anb'),inc=v('inc'),b=anb&&band(anb);
+    const r=(!anb||!inc)?'<div class="empty">Enter age and income.</div>':!b?'<div class="msg warn">Over age 70: individual consideration.</div>'
+      :`<div class="fig"><small>Maximum Life cover</small><b>${fmt(inc*b[2])}</b><em>${b[2]}× income</em></div>`;
+    return `<div class="res">${r}<div class="msg info">Assessed like the employee's own-life cover. All benefits allowed. Employees' family members can't be covered.</div></div>`+factorTable(anb,false);
+  }}
+};
+
+let mode='inc';
+function draw(){const M=MODES[mode];$('#form').innerHTML=M.form;if(M.sub){M.sub();$('#kt').onchange=()=>{M.sub();upd()}}upd()}
+function upd(){$('#out').innerHTML=MODES[mode].calc()}
+$('#form').addEventListener('input',e=>{moneyFormat(e);upd()});$('#form').addEventListener('change',e=>{if(e.target.id!=='kt')upd()});
+document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',x===b));mode=b.dataset.m;draw()});
+draw();
+</script>
+</body>
+</html>
