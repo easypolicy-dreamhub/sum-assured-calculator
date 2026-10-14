@@ -43,6 +43,8 @@ main{max-width:640px;margin:0 auto;padding:16px 16px 40px}
 :root[data-theme="dark"] .seg button[aria-pressed="true"]{color:#0F1A20}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .seg button[aria-pressed="true"]{color:#0F1A20}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:14px}
+.from{background:var(--teal-soft);border-color:var(--teal);font-size:.9rem}
+.from b{color:var(--teal)}
 label{display:block;font-weight:700;font-size:.9rem;margin:12px 0 4px}
 label:first-child{margin-top:0}
 label span{font-weight:400;color:var(--ink2)}
@@ -80,6 +82,7 @@ footer{max-width:640px;margin:0 auto;padding:0 16px 30px;font-size:.8rem;color:v
 </div></header>
 
 <main>
+  <div id="from"></div>
   <div class="seg" role="group" aria-label="Client type">
     <button data-m="inc" aria-pressed="true">Earning income</button>
     <button data-m="non" aria-pressed="false">No fixed income</button>
@@ -97,6 +100,7 @@ footer{max-width:640px;margin:0 auto;padding:0 16px 30px;font-size:.8rem;color:v
 const $=s=>document.querySelector(s);
 const fmt=n=>'RM '+Math.round(n).toLocaleString('en-MY');
 const v=id=>{const e=$('#'+id);const x=e?parseFloat(String(e.value).replace(/,/g,'')):NaN;return isNaN(x)?0:x};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 const BANDS=[[40,'Up to 40',30,20],[50,'41–50',25,15],[55,'51–55',20,10],[60,'56–60',15,8],[70,'61–70',10,5]];
 const band=anb=>BANDS.find(b=>anb<=b[0]);
@@ -117,19 +121,26 @@ function factorTable(anb,dd){
     BANDS.map(b=>`<tr class="${anb&&band(anb)===b?'hl':''}"><td>${b[1]}</td><td>${b[2]}×</td>${dd?`<td>${b[3]}×</td>`:''}</tr>`).join('')
   }<tr class="${anb>70?'hl':''}"><td>Over 70</td><td colspan="${dd?2:1}">Individual consideration</td></tr></table></div>`;
 }
-function room(max,have){
-  if(!have) return '';
+// Checks existing cover and, if entered, proposed new cover against the maximum
+function room(max,have,prop,lbl){
+  if(!have&&!prop) return '';
   const left=max-have;
-  return left>=0?`<div class="msg ok">Existing ${fmt(have)}. Room for another ${fmt(left)}.</div>`
-                :`<div class="msg bad">Existing ${fmt(have)} is already ${fmt(-left)} over the limit.</div>`;
+  if(!prop) return left>=0
+    ?`<div class="msg ok">${lbl}: existing ${fmt(have)}. Room for another ${fmt(left)}.</div>`
+    :`<div class="msg bad">${lbl}: existing ${fmt(have)} is already ${fmt(-left)} over the limit.</div>`;
+  if(left<=0) return `<div class="msg bad">${lbl}: existing ${fmt(have)} already uses the full limit, so the proposed ${fmt(prop)} can't be added.</div>`;
+  if(prop<=left) return `<div class="msg ok">${lbl}: proposed ${fmt(prop)} fits. Existing plus proposed is ${fmt(have+prop)}, leaving ${fmt(left-prop)} spare.</div>`;
+  return `<div class="msg warn">${lbl}: proposed ${fmt(prop)} is ${fmt(prop-left)} over. Maximum new cover allowed is ${fmt(left)}.</div>`;
 }
 
 const MODES={
  inc:{
   form:`<div class="row"><div><label for="anb">Age next birthday</label>${num('anb','35',false)}</div>
         <div><label for="inc">Annual income (RM)</label>${num('inc','120000')}</div></div>
-        <label for="exL">Existing Life/TPD cover <span>all insurers, optional</span></label>${num('exL','0')}
-        <label for="exD">Existing critical illness cover <span>optional</span></label>${num('exD','0')}`,
+        <div class="row"><div><label for="exL">Existing Life/TPD <span>all insurers</span></label>${num('exL','0')}</div>
+        <div><label for="exD">Existing CI cover</label>${num('exD','0')}</div></div>
+        <div class="row"><div><label for="prL">Proposed new Life/TPD <span>optional</span></label>${num('prL','0')}</div>
+        <div><label for="prD">Proposed new CI <span>optional</span></label>${num('prD','0')}</div></div>`,
   calc(){
     const anb=v('anb'),inc=v('inc');
     if(!anb||!inc) return `<div class="res"><div class="empty">Enter age and annual income.</div></div>`+factorTable(anb,true);
@@ -139,7 +150,7 @@ const MODES={
     return `<div class="res"><div class="top"><small>Maximum cover at ANB ${anb}, income ${fmt(inc)}</small></div>
       <div class="figs"><div class="fig"><small>Life / TPD</small><b>${fmt(ml)}</b><em>${b[2]}× income</em></div>
       <div class="fig"><small>Critical illness</small><b>${fmt(md)}</b><em>${b[3]}× income</em></div></div>
-      ${room(ml,v('exL')).replace('Existing','Life/TPD: existing')}${room(md,v('exD')).replace('Existing','CI: existing')}
+      ${room(ml,v('exL'),v('prL'),'Life/TPD')}${room(md,v('exD'),v('prD'),'CI')}
       <div class="msg info">Counts only the client's own earned income: salary, bonus, commission, deferred compensation. Investment income and household income don't count. Income must be reasonable for the job and age.</div></div>`
       +factorTable(anb,true);
   }},
@@ -210,6 +221,19 @@ function upd(){$('#out').innerHTML=MODES[mode].calc()}
 $('#form').addEventListener('input',e=>{moneyFormat(e);upd()});$('#form').addEventListener('change',e=>{if(e.target.id!=='kt')upd()});
 document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.seg button').forEach(x=>x.setAttribute('aria-pressed',x===b));mode=b.dataset.m;draw()});
 draw();
+
+// Figures passed from the Protection Needs Calculator
+(function(){
+  const q=new URLSearchParams(location.search);
+  if(q.get('from')!=='needs') return;
+  ['anb','inc','exL','exD','prL','prD'].forEach(k=>{
+    const el=$('#'+k), x=q.get(k);
+    if(el&&x){el.value=el.matches('[data-money]')?Number(x).toLocaleString('en-MY'):x;}
+  });
+  const name=q.get('name');
+  $('#from').innerHTML=`<div class="card from"><b>Carried over from the Protection Needs Calculator${name?' for '+esc(name):''}.</b><br>Proposed cover is the protection gap and CI gap from that calculator. Existing Life/TPD adds up personal, group and MRTA/MLTA cover. Edit any figure here if needed.</div>`;
+  upd();
+})();
 </script>
 </body>
 </html>
